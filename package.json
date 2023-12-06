@@ -1,8 +1,12 @@
 {
-    "name": "json-viewer",
-    "version": "0.1.0",
+    "name": "simple-json-viewer",
+    "version": "0.0.1",
     "type": "module",
     "main": "dist/json-viewer.js",
+    "files": [
+        "src/",
+        "dist/"
+    ],
     "scripts": {
         "dev": "vite",
         "build": "tsc && vite build && npm run minify",
