@@ -1,9 +1,9 @@
-import { LitElement, css, html } from "lit";
+import { LitElement, css, html, type TemplateResult } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
+import { ref } from "lit/directives/ref.js";
 import { type JsonCollapse } from "./json-collapse";
 import "./json-collapse";
-import { ref } from "lit/directives/ref.js";
 
 declare global {
     interface HTMLElementTagNameMap {
@@ -42,15 +42,15 @@ export class JsonViewer extends LitElement {
         }
     }
 
-    renderUndefined() {
+    private renderUndefined() {
         return html`<div class="undefined">undefined</div> `;
     }
 
-    renderNull() {
-        return html` <div class="null">null</div> `;
+    private renderNull() {
+        return html`<div class="null">null</div>`;
     }
 
-    renderString(s: string) {
+    private renderString(s: string) {
         const URLCanParse = (u: string) => {
             if (!!URL.canParse) return URL.canParse(u);
             try {
@@ -62,20 +62,26 @@ export class JsonViewer extends LitElement {
         };
         return html`
             <span class="string"
-                >"${when(
-                    URLCanParse(s),
-                    () => html`<a href="${s}" target="_blank">${s}</a>`,
-                    () => html`${s}`
-                )}"</span
+                >${this.renderQuote(
+                    when(
+                        URLCanParse(s),
+                        () => html`<a href="${s}" target="_blank">${s}</a>`,
+                        () => html`${s}`
+                    )
+                )}</span
             >
         `;
     }
 
-    renderNumber(n: number) {
+    private renderQuote(x: string | TemplateResult) {
+        return html`<span class="quote"></span>${x}<span class="quote"></span>`;
+    }
+
+    private renderNumber(n: number) {
         return html` <span class="number">${n}</span> `;
     }
 
-    renderBoolean(b: boolean) {
+    private renderBoolean(b: boolean) {
         return html` <span class="boolean">${b}</span> `;
     }
 
@@ -111,7 +117,7 @@ export class JsonViewer extends LitElement {
                             })}
                         >
                             <span slot="open">
-                                <span>${k}</span><span style="user-select: none">:&nbsp;</span>
+                                ${this.renderPropertyKey(k)}
                                 <span style="user-select: none">
                                     ${when(
                                         isArray,
@@ -120,9 +126,7 @@ export class JsonViewer extends LitElement {
                                     )}
                                 </span>
                             </span>
-                            <span slot="close">
-                                <span>${k}</span><span style="user-select: none">:&nbsp;</span>
-                            </span>
+                            <span slot="close"> ${this.renderPropertyKey(k)} </span>
                             <json-viewer
                                 .data=${v}
                                 style="padding-left: 1rem"
@@ -133,8 +137,11 @@ export class JsonViewer extends LitElement {
                         </json-collapse>
                     `,
                     () => {
-                        const content = html`${k}:
-                            <json-viewer .data=${v} style="display: inline-block; vertical-align: top"></json-viewer> `;
+                        const content = html`
+                            ${this.renderPropertyKey(k)}
+                            <json-viewer .data=${v} style="display: inline-block; vertical-align: top"></json-viewer>
+                        `;
+
                         return html` <json-collapse .freeze=${true}>
                             <div slot="open">${content}</div>
                             <div slot="close">${content}</div>
@@ -145,8 +152,8 @@ export class JsonViewer extends LitElement {
         </div> `;
     }
 
-    renderArray(a: Array<any>) {
-        return html`<div class="array">${a}</div> `;
+    private renderPropertyKey(k: string) {
+        return html`<span class="propertyKey">${k}</span>`;
     }
 
     static styles = css`
@@ -168,8 +175,21 @@ export class JsonViewer extends LitElement {
         .object {
             color: #0074e8;
         }
+        .null,
+        .undefined {
+            color: #737373;
+        }
         a {
             color: currentColor;
+        }
+        .quote::after {
+            content: '"';
+        }
+        .propertyKey {
+            user-select: all;
+        }
+        .propertyKey::after {
+            content: ": ";
         }
     `;
 }

@@ -7,6 +7,7 @@ const minifyHTML = _minifyHTML.default;
 export default defineConfig({
     build: {
         lib: {
+            fileName: "json-viewer",
             entry: "src/json-viewer.ts",
             formats: ["es"],
         },

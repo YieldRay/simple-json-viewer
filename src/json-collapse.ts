@@ -32,7 +32,7 @@ export class JsonCollapse extends LitElement {
             .toggle {
                 display: flex;
                 gap: 1rem;
-                padding: 2px 1px;
+                padding: 2px;
                 cursor: pointer;
             }
             .toggle:hover {
