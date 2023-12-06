@@ -1,0 +1,17 @@
+{
+    "name": "json-viewer",
+    "version": "0.1.0",
+    "type": "module",
+    "main": "dist/json-viewer.js",
+    "scripts": {
+        "dev": "vite",
+        "build": "tsc && vite build && npm run minify",
+        "minify": "esbuild --minify --allow-overwrite dist/json-viewer.js --outfile=dist/json-viewer.js"
+    },
+    "devDependencies": {
+        "lit": "^3.1.0",
+        "typescript": "^5.3.2",
+        "vite": "^5.0.5",
+        "rollup-plugin-minify-html-literals": "^1.2.6"
+    }
+}
