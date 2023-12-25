@@ -22,7 +22,7 @@ const jv = document.createElement("json-viewer");
 jv.data = { some: "json", array: [0, true, "2"] };
 document.body.append(jv);
 
-// can also expand all or collpase all
+// can also expand all or collapse all
 jv.expandAll();
-jv.collpaseAll();
+jv.collapseAll();
 ```

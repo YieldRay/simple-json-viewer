@@ -97,9 +97,9 @@ export class JsonViewer extends LitElement {
         this._collapseSet.forEach((e) => (e.expand = true));
         this._subViewer.forEach((e) => e.expandAll());
     }
-    public collpaseAll() {
+    public collapseAll() {
         this._collapseSet.forEach((e) => (e.expand = false));
-        this._subViewer.forEach((e) => e.collpaseAll());
+        this._subViewer.forEach((e) => e.collapseAll());
     }
 
     private renderObject(o: object, isArray = false) {
@@ -111,7 +111,7 @@ export class JsonViewer extends LitElement {
                     isObject(v),
                     () => html`
                         <json-collapse
-                            .hideMarkder=${false}
+                            .hideMarker=${false}
                             ${ref((e) => {
                                 if (e) this._collapseSet.add(e as JsonCollapse);
                             })}

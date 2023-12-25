@@ -56,7 +56,7 @@ export class JsonCollapse extends LitElement {
                 font-size: small;
                 cursor: pointer;
             }
-            .hideMarkder {
+            .hideMarker {
                 opacity: 0;
                 pointer-events: none;
             }
@@ -79,7 +79,7 @@ export class JsonCollapse extends LitElement {
                 <div
                     class="${classMap({
                         marker: true,
-                        hideMarkder: this.freeze,
+                        hideMarker: this.freeze,
                     })}"
                 >
                     ${when(
