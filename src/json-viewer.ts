@@ -1,8 +1,8 @@
-import { LitElement, css, html, type TemplateResult } from "lit";
+import { LitElement, type TemplateResult, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { when } from "lit/directives/when.js";
 import { ref } from "lit/directives/ref.js";
-import { type JsonCollapse } from "./json-collapse";
+import { when } from "lit/directives/when.js";
+import type { JsonCollapse } from "./json-collapse";
 import "./json-collapse";
 
 declare global {
@@ -22,6 +22,7 @@ export class JsonViewer extends LitElement {
             toAttribute: (value) => JSON.stringify(value),
         },
     })
+    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     data: any = undefined;
 
     render() {
@@ -52,7 +53,7 @@ export class JsonViewer extends LitElement {
 
     private renderString(s: string) {
         const URLCanParse = (u: string) => {
-            if (!!URL.canParse) return URL.canParse(u);
+            if (URL.canParse) return URL.canParse(u);
             try {
                 new URL(u);
                 return true;
@@ -66,8 +67,8 @@ export class JsonViewer extends LitElement {
                     when(
                         URLCanParse(s),
                         () => html`<a href="${s}" target="_blank">${s}</a>`,
-                        () => html`${s}`
-                    )
+                        () => html`${s}`,
+                    ),
                 )}</span
             >
         `;
@@ -94,12 +95,12 @@ export class JsonViewer extends LitElement {
         this._subViewer.clear();
     }
     public expandAll() {
-        this._collapseSet.forEach((e) => (e.expand = true));
-        this._subViewer.forEach((e) => e.expandAll());
+        for (const el of this._collapseSet) el.expand = true;
+        for (const el of this._subViewer) el.expandAll();
     }
     public collapseAll() {
-        this._collapseSet.forEach((e) => (e.expand = false));
-        this._subViewer.forEach((e) => e.collapseAll());
+        for (const el of this._collapseSet) el.expand = false;
+        for (const el of this._subViewer) el.collapseAll();
     }
 
     private renderObject(o: object, isArray = false) {
@@ -122,7 +123,7 @@ export class JsonViewer extends LitElement {
                                     ${when(
                                         isArray,
                                         () => html`[...]`,
-                                        () => html`{...}`
+                                        () => html`{...}`,
                                     )}
                                 </span>
                             </span>
@@ -139,15 +140,18 @@ export class JsonViewer extends LitElement {
                     () => {
                         const content = html`
                             ${this.renderPropertyKey(k)}
-                            <json-viewer .data=${v} style="display: inline-block; vertical-align: top"></json-viewer>
+                            <json-viewer
+                                .data=${v}
+                                style="display: inline-block; vertical-align: top"
+                            ></json-viewer>
                         `;
 
                         return html` <json-collapse .freeze=${true}>
                             <div slot="open">${content}</div>
                             <div slot="close">${content}</div>
                         </json-collapse>`;
-                    }
-                )
+                    },
+                ),
             )}
         </div> `;
     }

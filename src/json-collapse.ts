@@ -1,7 +1,7 @@
 import { LitElement, css, html } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { when } from "lit/directives/when.js";
 import { classMap } from "lit/directives/class-map.js";
+import { when } from "lit/directives/when.js";
 
 declare global {
     interface HTMLElementTagNameMap {
@@ -85,14 +85,14 @@ export class JsonCollapse extends LitElement {
                     ${when(
                         this.expand,
                         () => html`<div style="rotate: 90deg">▶</div>`,
-                        () => html`<div>▶</div>`
+                        () => html`<div>▶</div>`,
                     )}
                 </div>
                 <div class="summary">
                     ${when(
                         this.expand,
                         () => html`<slot name="close"></slot>`,
-                        () => html`<slot name="open"></slot>`
+                        () => html`<slot name="open"></slot>`,
                     )}
                 </div>
             </div>
@@ -104,6 +104,10 @@ export class JsonCollapse extends LitElement {
     private _handleClick() {
         if (this.freeze) return;
         this.expand = !this.expand;
-        this.dispatchEvent(new CustomEvent<{ expand: boolean }>("change", { detail: { expand: this.expand } }));
+        this.dispatchEvent(
+            new CustomEvent<{ expand: boolean }>("change", {
+                detail: { expand: this.expand },
+            }),
+        );
     }
 }
