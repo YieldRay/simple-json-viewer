@@ -1,9 +1,7 @@
-import { LitElement, type TemplateResult, css, html } from "lit";
+import { LitElement, css, html, nothing } from "lit";
 import { customElement, property } from "lit/decorators.js";
 import { ref } from "lit/directives/ref.js";
 import { when } from "lit/directives/when.js";
-import type { JsonCollapse } from "./json-collapse";
-import "./json-collapse";
 
 declare global {
     interface HTMLElementTagNameMap {
@@ -22,14 +20,26 @@ export class JsonViewer extends LitElement {
             toAttribute: (value) => JSON.stringify(value),
         },
     })
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     data: any = undefined;
 
+    @property({ type: Boolean, reflect: true })
+    expanded = false;
+
+    @property({ type: Number, reflect: true })
+    level = 1;
+
+    @property({ type: String })
+    belongingKey: string | undefined = undefined;
+
     render() {
+        this.style.paddingLeft = `${this.level === 1 ? 0 : 20}px`;
+
         const data = this.data;
-        if (Array.isArray(data)) return this.renderObject(data, true);
         if (data === null) return this.renderNull();
-        switch (typeof data) {
+        if (data === undefined) return this.renderUndefined();
+        if (Array.isArray(data)) return this.renderObject(data, true);
+        const type = typeof data;
+        switch (type) {
             case "object":
                 return this.renderObject(data);
             case "string":
@@ -38,17 +48,15 @@ export class JsonViewer extends LitElement {
                 return this.renderNumber(data);
             case "boolean":
                 return this.renderBoolean(data);
-            default:
-                return this.renderUndefined();
         }
     }
 
     private renderUndefined() {
-        return html`<div class="undefined">undefined</div> `;
+        return html`<span class="undefined">undefined</span>`;
     }
 
     private renderNull() {
-        return html`<div class="null">null</div>`;
+        return html`<span class="null">null</span>`;
     }
 
     private renderString(s: string) {
@@ -63,101 +71,83 @@ export class JsonViewer extends LitElement {
         };
         return html`
             <span class="string"
-                >${this.renderQuote(
-                    when(
-                        URLCanParse(s),
-                        () => html`<a href="${s}" target="_blank">${s}</a>`,
-                        () => html`${s}`,
-                    ),
+                >${when(
+                    URLCanParse(s),
+                    () => html`<a href="${s}" target="_blank">${s}</a>`,
+                    () => html`${s}`
                 )}</span
             >
         `;
     }
 
-    private renderQuote(x: string | TemplateResult) {
-        return html`<span class="quote"></span>${x}<span class="quote"></span>`;
-    }
-
     private renderNumber(n: number) {
-        return html` <span class="number">${n}</span> `;
+        return html`<span class="number">${n}</span>`;
     }
 
     private renderBoolean(b: boolean) {
-        return html` <span class="boolean">${b}</span> `;
-    }
-
-    private _collapseSet = new Set<JsonCollapse>();
-    private _subViewer = new Set<JsonViewer>();
-
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        this._collapseSet.clear();
-        this._subViewer.clear();
-    }
-    public expandAll() {
-        for (const el of this._collapseSet) el.expand = true;
-        for (const el of this._subViewer) el.expandAll();
-    }
-    public collapseAll() {
-        for (const el of this._collapseSet) el.expand = false;
-        for (const el of this._subViewer) el.collapseAll();
+        return html`<span class="boolean">${b}</span>`;
     }
 
     private renderObject(o: object, isArray = false) {
-        const isObject = (x: unknown) => x !== null && typeof x === "object";
+        const inner = Object.entries(o).map(([k, v]) => {
+            const isObject = typeof v === "object" && v !== null;
+            if (!isObject) {
+                return html`<span class="propertyKey">${k}</span>
+                    <json-viewer
+                        .data=${v}
+                        .level=${this.level + 1}
+                        ${ref((el) => {
+                            if (el) this.childSet.add(el as JsonViewer);
+                        })}
+                    ></json-viewer>`;
+            }
 
-        return html`<div class="object">
-            ${Object.entries(o).map(([k, v]) =>
-                when(
-                    isObject(v),
-                    () => html`
-                        <json-collapse
-                            .hideMarker=${false}
-                            ${ref((e) => {
-                                if (e) this._collapseSet.add(e as JsonCollapse);
-                            })}
-                        >
-                            <span slot="open">
-                                ${this.renderPropertyKey(k)}
-                                <span style="user-select: none">
-                                    ${when(
-                                        isArray,
-                                        () => html`[...]`,
-                                        () => html`{...}`,
-                                    )}
-                                </span>
-                            </span>
-                            <span slot="close"> ${this.renderPropertyKey(k)} </span>
-                            <json-viewer
-                                .data=${v}
-                                style="padding-left: 1rem"
-                                ${ref((e) => {
-                                    if (e) this._subViewer.add(e as JsonViewer);
-                                })}
-                            ></json-viewer>
-                        </json-collapse>
-                    `,
-                    () => {
-                        const content = html`
-                            ${this.renderPropertyKey(k)}
-                            <json-viewer
-                                .data=${v}
-                                style="display: inline-block; vertical-align: top"
-                            ></json-viewer>
-                        `;
+            return html`<details
+                .open=${this.expanded}
+                @toggle=${(event: ToggleEvent) => {
+                    this.expanded = (event.target as HTMLDetailsElement).open;
+                }}
+            >
+                <summary>
+                    <span class="propertyKey">${k}</span>
+                    ${when(
+                        this.expanded,
+                        () => nothing,
+                        () =>
+                            html`<span
+                                class="propertyMarker"
+                                data-before=${isArray ? "[" : "{"}
+                                data-after=${isArray ? "]" : "}"}
+                            >
+                                …
+                            </span>`
+                    )}
+                </summary>
+                <json-viewer
+                    .data=${v}
+                    .level=${this.level + 1}
+                    ${ref((el) => {
+                        if (el) this.childSet.add(el as JsonViewer);
+                    })}
+                ></json-viewer>
+            </details>`;
+        });
 
-                        return html` <json-collapse .freeze=${true}>
-                            <div slot="open">${content}</div>
-                            <div slot="close">${content}</div>
-                        </json-collapse>`;
-                    },
-                ),
-            )}
-        </div> `;
+        return html`<section class="object">${inner}</section>`;
     }
 
-    private renderPropertyKey(k: string) {
-        return html`<span class="propertyKey">${k}</span>`;
+    private childSet = new Set<JsonViewer>();
+    public expandAll() {
+        this.expanded = true;
+        for (const el of this.childSet) el.expanded = true;
+    }
+    public collapseAll() {
+        this.expanded = false;
+        for (const el of this.childSet) el.expanded = false;
+    }
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        this.childSet.clear();
     }
 
     static styles = css`
@@ -170,6 +160,10 @@ export class JsonViewer extends LitElement {
             overflow-x: auto;
             color: #dd00a9;
         }
+        .string::before,
+        .string::after {
+            content: '"';
+        }
         .number {
             color: #058b00;
         }
@@ -178,6 +172,11 @@ export class JsonViewer extends LitElement {
         }
         .object {
             color: #0074e8;
+            display: grid;
+            grid-template-columns: auto 1fr;
+        }
+        .object > details {
+            grid-column: 1 / -1;
         }
         .null,
         .undefined {
@@ -186,14 +185,27 @@ export class JsonViewer extends LitElement {
         a {
             color: currentColor;
         }
-        .quote::after {
-            content: '"';
-        }
         .propertyKey {
             user-select: all;
         }
+        :not(summary) > .propertyKey::before {
+            content: "▶";
+            visibility: hidden;
+            margin-right: 2px;
+        }
         .propertyKey::after {
             content: ": ";
+        }
+        .propertyMarker {
+            color: #5c5c5f;
+        }
+        .propertyMarker::before {
+            color: #0074e8;
+            content: attr(data-before);
+        }
+        .propertyMarker::after {
+            color: #0074e8;
+            content: attr(data-after);
         }
     `;
 }

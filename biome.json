@@ -35,7 +35,11 @@
             "recommended": true,
             "style": {
                 "useNamingConvention": "off",
-                "useBlockStatements": "off"
+                "useBlockStatements": "off",
+                "noUselessElse": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "off"
             }
         }
     }
