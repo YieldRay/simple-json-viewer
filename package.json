@@ -1,11 +1,11 @@
 {
     "name": "simple-json-viewer",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "type": "module",
     "main": "dist/json-viewer.js",
     "files": [
         "src/",
-        "dist/"
+        "lib/"
     ],
     "scripts": {
         "dev": "vite",
@@ -31,5 +31,6 @@
         "url": "https://github.com/YieldRay/simple-json-viewer/issues"
     },
     "homepage": "https://github.com/YieldRay/simple-json-viewer#readme",
+    "license": "MIT",
     "packageManager": "pnpm@9.9.0"
 }
