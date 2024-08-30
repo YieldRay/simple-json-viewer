@@ -5,15 +5,50 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Demo</title>
         <script type="module" src="/src/json-viewer.ts"></script>
+        <link rel="stylesheet" href="https://unpkg.com/landsoul" />
+        <style>
+            body {
+                max-width: 800px;
+                margin: auto;
+                padding: 1rem;
+            }
+        </style>
     </head>
     <body>
-        <json-viewer id="jv" />
+        <h1>json-viewer</h1>
+
+        <p>Example APIs below, click anyone to try!</p>
+        <json-viewer id="jv" data='"click any link upon to try"' />
     </body>
-    <script>
-        fetch("https://jsonplaceholder.typicode.com/comments")
-            .then((res) => res.json())
-            .then((data) => {
-                jv.data = data;
-            });
+    <script type="module">
+        const resource = new URL(location.href).searchParams.get("api");
+        if (resource) {
+            jv.data = "fetching... please wait...";
+            fetch(resource)
+                .then((res) => res.json())
+                .then((data) => {
+                    jv.data = data;
+                });
+        }
+
+        const exampleAPIs = [
+            "https://jsonplaceholder.typicode.com/comments",
+            "https://swapi.dev/api/people/",
+            "https://api.allorigins.win/raw?url=https://www.pixiv.net/ranking.php?format=json",
+        ];
+
+        const ul = document.createElement("ul");
+        for (const api of exampleAPIs) {
+            const url = new URL(location.href);
+            url.searchParams.set("api", api);
+            const a = document.createElement("a");
+            a.innerText = api;
+            a.href = url.toString();
+            const li = document.createElement("li");
+            li.append(a);
+            if (resource === api) li.style.opacity = "0.333";
+            ul.append(li);
+        }
+        document.querySelector("p").after(ul);
     </script>
 </html>
