@@ -1,8 +1,9 @@
 {
     "name": "simple-json-viewer",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "type": "module",
-    "main": "dist/json-viewer.js",
+    "types": "lib/json-viewer.d.ts",
+    "main": "lib/json-viewer.js",
     "files": [
         "src/",
         "lib/"
@@ -11,17 +12,17 @@
         "dev": "vite",
         "build": "vite build",
         "build:pages": "vite build -c vite.pages.config.ts",
-        "lint": "biome lint",
-        "format": "biome format",
-        "check": "biome check"
+        "lint": "biome lint --write",
+        "format": "biome format --write",
+        "check": "biome check --write"
     },
     "devDependencies": {
-        "@biomejs/biome": "1.8.3",
         "lit": "^3.2.0",
-        "minify-html-literals": "^1.3.5",
         "typescript": "^5.5.4",
+        "minify-html-literals": "^1.3.5",
         "vite": "^5.4.2",
-        "vite-plugin-dts": "^4.0.3"
+        "vite-plugin-dts": "^4.0.3",
+        "@biomejs/biome": "1.8.3"
     },
     "repository": {
         "type": "git",

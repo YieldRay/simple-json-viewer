@@ -65,8 +65,8 @@ export class JsonViewer extends LitElement {
                 when(
                     URLCanParse(s),
                     () => html`<a href="${s}" target="_blank">${s}</a>`,
-                    () => html`${s}`
-                )
+                    () => html`${s}`,
+                ),
             )}</span
         >`;
     }
@@ -119,7 +119,7 @@ export class JsonViewer extends LitElement {
                                 ${when(
                                     isArray,
                                     () => html`[…]`,
-                                    () => html`{…}`
+                                    () => html`{…}`,
                                 )}
                             </span>
                         </span>
@@ -143,8 +143,8 @@ export class JsonViewer extends LitElement {
                             <div slot="open">${content}</div>
                             <div slot="close">${content}</div>
                         </json-collapse>`;
-                    }
-                )
+                    },
+                ),
             )}
         </div> `;
     }
