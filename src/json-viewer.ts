@@ -1,7 +1,7 @@
-import { LitElement, css, html, nothing } from "lit";
-import { customElement, property } from "lit/decorators.js";
-import { ref } from "lit/directives/ref.js";
+import { LitElement, css, html } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 import { when } from "lit/directives/when.js";
+import { classMap } from "lit/directives/class-map.js";
 
 declare global {
     interface HTMLElementTagNameMap {
@@ -22,14 +22,7 @@ export class JsonViewer extends LitElement {
     })
     data: any = undefined;
 
-    @property({ type: Boolean, reflect: true })
-    expanded = false;
-
-    @property({ type: Number, reflect: true })
-    level = 1;
-
-    @property({ type: String })
-    belongingKey: string | undefined = undefined;
+    @state() private level = 1;
 
     render() {
         this.style.paddingLeft = `${this.level === 1 ? 0 : 20}px`;
@@ -88,72 +81,59 @@ export class JsonViewer extends LitElement {
         return html`<span class="boolean">${b}</span>`;
     }
 
+    @state() private expandedPropertyKeys = new Set<PropertyKey>();
+
     private renderObject(o: object, isArray = false) {
         const inner = Object.entries(o).map(([k, v]) => {
             const isObject = typeof v === "object" && v !== null;
             if (!isObject) {
                 return html`<span class="propertyKey">${k}</span>
-                    <json-viewer
-                        .data=${v}
-                        .level=${this.level + 1}
-                        ${ref((el) => {
-                            if (el) this.childSet.add(el as JsonViewer);
-                        })}
-                    ></json-viewer>`;
+                    <json-viewer .data=${v} .level=${this.level + 1}></json-viewer>`;
             }
 
-            return html`<details
-                .open=${this.expanded}
-                @toggle=${(event: ToggleEvent) => {
-                    this.expanded = (event.target as HTMLDetailsElement).open;
-                }}
-            >
-                <summary>
-                    <span class="propertyKey">${k}</span>
-                    ${when(
-                        this.expanded,
-                        () => nothing,
-                        () =>
-                            html`<span
-                                class="propertyMarker"
-                                data-before=${isArray ? "[" : "{"}
-                                data-after=${isArray ? "]" : "}"}
-                            >
-                                …
-                            </span>`
-                    )}
-                </summary>
-                <json-viewer
-                    .data=${v}
-                    .level=${this.level + 1}
-                    ${ref((el) => {
-                        if (el) this.childSet.add(el as JsonViewer);
-                    })}
-                ></json-viewer>
-            </details>`;
+            /** is current key should be expanded */
+            const expanded = this.expandedPropertyKeys.has(k);
+            return html`<span
+                    class=${classMap({ propertyKey: true, expanded, isObject })}
+                    @click=${() => {
+                        if (expanded) this.expandedPropertyKeys.delete(k);
+                        else this.expandedPropertyKeys.add(k);
+                        this.requestUpdate();
+                    }}
+                    >${k}</span
+                >
+
+                ${when(
+                    expanded,
+                    () => html`<json-viewer
+                        .data=${v}
+                        .level=${this.level + 1}
+                        class=${classMap({ isObject })}
+                        style=${expanded ? "grid-column: 1 / -1;" : ""}
+                    ></json-viewer>`,
+                    () =>
+                        html`<span
+                            class="propertyObject"
+                            @click=${() => {
+                                this.expandedPropertyKeys.add(k);
+                                this.requestUpdate();
+                            }}
+                        >
+                            <span class="propertyObjectLeft">${isArray ? "[" : "{"}</span
+                            ><span class="propertyObjectMiddle">…</span
+                            ><span class="propertyObjectRight">${isArray ? "]" : "}"}</span>
+                        </span>`
+                )}`;
         });
 
         return html`<section class="object">${inner}</section>`;
-    }
-
-    private childSet = new Set<JsonViewer>();
-    public expandAll() {
-        this.expanded = true;
-        for (const el of this.childSet) el.expanded = true;
-    }
-    public collapseAll() {
-        this.expanded = false;
-        for (const el of this.childSet) el.expanded = false;
-    }
-    disconnectedCallback() {
-        super.disconnectedCallback();
-        this.childSet.clear();
     }
 
     static styles = css`
         :host {
             display: flow-root;
             font-family: Consolas, monospace;
+            font-size: 12px;
         }
         .string {
             white-space: pre-wrap;
@@ -174,9 +154,7 @@ export class JsonViewer extends LitElement {
             color: #0074e8;
             display: grid;
             grid-template-columns: auto 1fr;
-        }
-        .object > details {
-            grid-column: 1 / -1;
+            gap: 2px;
         }
         .null,
         .undefined {
@@ -188,24 +166,32 @@ export class JsonViewer extends LitElement {
         .propertyKey {
             user-select: all;
         }
-        :not(summary) > .propertyKey::before {
+        .propertyKey::before {
             content: "▶";
             visibility: hidden;
-            margin-right: 2px;
+            margin-right: 8px;
+            font-size: 8px;
         }
         .propertyKey::after {
             content: ": ";
         }
-        .propertyMarker {
+        .propertyObject {
+            font-size: 10px;
+            padding-left: 20px;
+        }
+        .propertyObjectMiddle {
             color: #5c5c5f;
         }
-        .propertyMarker::before {
-            color: #0074e8;
-            content: attr(data-before);
+
+        .propertyKey.isObject::before {
+            visibility: visible;
         }
-        .propertyMarker::after {
-            color: #0074e8;
-            content: attr(data-after);
+        .propertyKey.expanded::before {
+            content: "▼";
+            font-size: 11px;
+        }
+        :is(.propertyKey, .propertyKey ~ :not(.isObject)):hover {
+            background: #f0f9fe;
         }
     `;
 }

@@ -10,7 +10,7 @@
         <json-viewer id="jv" />
     </body>
     <script>
-        fetch("https://jsonplaceholder.typicode.com/comments")
+        fetch("https://dummyjson.com/todos")
             .then((res) => res.json())
             .then((data) => {
                 jv.data = data;
