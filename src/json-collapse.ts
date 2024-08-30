@@ -34,6 +34,7 @@ export class JsonCollapse extends LitElement {
                 gap: 1rem;
                 padding: 2px;
                 cursor: pointer;
+                align-items: center;
             }
             .toggle:hover {
                 background-color: #f0f9fe;
@@ -55,6 +56,7 @@ export class JsonCollapse extends LitElement {
                 user-select: none;
                 font-size: small;
                 cursor: pointer;
+                font-size: 11px;
             }
             .hideMarker {
                 opacity: 0;
@@ -72,7 +74,11 @@ export class JsonCollapse extends LitElement {
     render() {
         return html`
             <div
-                class="${classMap({ toggle: true, toggleActive: this.expand, toggleFreeze: this.freeze })}"
+                class="${classMap({
+                    toggle: true,
+                    toggleActive: this.expand,
+                    toggleFreeze: this.freeze,
+                })}"
                 .tabIndex=${-1}
                 @click=${() => this._handleClick()}
             >
@@ -85,19 +91,19 @@ export class JsonCollapse extends LitElement {
                     ${when(
                         this.expand,
                         () => html`<div style="rotate: 90deg">▶</div>`,
-                        () => html`<div>▶</div>`,
+                        () => html`<div>▶</div>`
                     )}
                 </div>
                 <div class="summary">
                     ${when(
                         this.expand,
                         () => html`<slot name="close"></slot>`,
-                        () => html`<slot name="open"></slot>`,
+                        () => html`<slot name="open"></slot>`
                     )}
                 </div>
             </div>
 
-            <div class="body">${this.expand ? html` <slot></slot> ` : html``}</div>
+            <div class="body">${when(this.expand, () => html`<slot></slot>`)}</div>
         `;
     }
 
@@ -107,7 +113,7 @@ export class JsonCollapse extends LitElement {
         this.dispatchEvent(
             new CustomEvent<{ expand: boolean }>("change", {
                 detail: { expand: this.expand },
-            }),
+            })
         );
     }
 }

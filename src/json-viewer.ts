@@ -22,7 +22,6 @@ export class JsonViewer extends LitElement {
             toAttribute: (value) => JSON.stringify(value),
         },
     })
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     data: any = undefined;
 
     render() {
@@ -44,7 +43,7 @@ export class JsonViewer extends LitElement {
     }
 
     private renderUndefined() {
-        return html`<div class="undefined">undefined</div> `;
+        return html`<div class="undefined">undefined</div>`;
     }
 
     private renderNull() {
@@ -61,17 +60,15 @@ export class JsonViewer extends LitElement {
                 return false;
             }
         };
-        return html`
-            <span class="string"
-                >${this.renderQuote(
-                    when(
-                        URLCanParse(s),
-                        () => html`<a href="${s}" target="_blank">${s}</a>`,
-                        () => html`${s}`,
-                    ),
-                )}</span
-            >
-        `;
+        return html`<span class="string"
+            >${this.renderQuote(
+                when(
+                    URLCanParse(s),
+                    () => html`<a href="${s}" target="_blank">${s}</a>`,
+                    () => html`${s}`
+                )
+            )}</span
+        >`;
     }
 
     private renderQuote(x: string | TemplateResult) {
@@ -79,11 +76,11 @@ export class JsonViewer extends LitElement {
     }
 
     private renderNumber(n: number) {
-        return html` <span class="number">${n}</span> `;
+        return html`<span class="number">${n}</span>`;
     }
 
     private renderBoolean(b: boolean) {
-        return html` <span class="boolean">${b}</span> `;
+        return html`<span class="boolean">${b}</span>`;
     }
 
     private _collapseSet = new Set<JsonCollapse>();
@@ -110,48 +107,44 @@ export class JsonViewer extends LitElement {
             ${Object.entries(o).map(([k, v]) =>
                 when(
                     isObject(v),
-                    () => html`
-                        <json-collapse
-                            .hideMarker=${false}
-                            ${ref((e) => {
-                                if (e) this._collapseSet.add(e as JsonCollapse);
-                            })}
-                        >
-                            <span slot="open">
-                                ${this.renderPropertyKey(k)}
-                                <span style="user-select: none">
-                                    ${when(
-                                        isArray,
-                                        () => html`[...]`,
-                                        () => html`{...}`,
-                                    )}
-                                </span>
-                            </span>
-                            <span slot="close"> ${this.renderPropertyKey(k)} </span>
-                            <json-viewer
-                                .data=${v}
-                                style="padding-left: 1rem"
-                                ${ref((e) => {
-                                    if (e) this._subViewer.add(e as JsonViewer);
-                                })}
-                            ></json-viewer>
-                        </json-collapse>
-                    `,
-                    () => {
-                        const content = html`
+                    () => html`<json-collapse
+                        .hideMarker=${false}
+                        ${ref((e) => {
+                            if (e) this._collapseSet.add(e as JsonCollapse);
+                        })}
+                    >
+                        <span slot="open">
                             ${this.renderPropertyKey(k)}
+                            <span class="propertyKeyValuePlaceholder">
+                                ${when(
+                                    isArray,
+                                    () => html`[…]`,
+                                    () => html`{…}`
+                                )}
+                            </span>
+                        </span>
+                        <span slot="close">${this.renderPropertyKey(k)}</span>
+                        <json-viewer
+                            .data=${v}
+                            style="padding-left: 1rem"
+                            ${ref((e) => {
+                                if (e) this._subViewer.add(e as JsonViewer);
+                            })}
+                        ></json-viewer>
+                    </json-collapse>`,
+                    () => {
+                        const content = html`${this.renderPropertyKey(k)}
                             <json-viewer
                                 .data=${v}
                                 style="display: inline-block; vertical-align: top"
-                            ></json-viewer>
-                        `;
+                            ></json-viewer>`;
 
-                        return html` <json-collapse .freeze=${true}>
+                        return html`<json-collapse .freeze=${true}>
                             <div slot="open">${content}</div>
                             <div slot="close">${content}</div>
                         </json-collapse>`;
-                    },
-                ),
+                    }
+                )
             )}
         </div> `;
     }
@@ -164,6 +157,7 @@ export class JsonViewer extends LitElement {
         :host {
             display: flow-root;
             font-family: Consolas, monospace;
+            font-size: 14px;
         }
         .string {
             white-space: pre-wrap;
@@ -194,6 +188,10 @@ export class JsonViewer extends LitElement {
         }
         .propertyKey::after {
             content: ": ";
+        }
+        .propertyKeyValuePlaceholder {
+            user-select: none;
+            font-size: 12px;
         }
     `;
 }

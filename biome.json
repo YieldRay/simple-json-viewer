@@ -36,6 +36,9 @@
             "style": {
                 "useNamingConvention": "off",
                 "useBlockStatements": "off"
+            },
+            "suspicious": {
+                "noExplicitAny": "off"
             }
         }
     }
