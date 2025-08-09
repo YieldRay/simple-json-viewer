@@ -61,14 +61,14 @@ export class JsonViewer extends LitElement {
             }
         };
         return html`<span class="string"
-            >${this.renderQuote(
-                when(
-                    URLCanParse(s),
-                    () => html`<a href="${s}" target="_blank">${s}</a>`,
-                    () => html`${s}`,
-                ),
-            )}</span
-        >`;
+      >${this.renderQuote(
+          when(
+              URLCanParse(s),
+              () => html`<a href="${s}" target="_blank">${s}</a>`,
+              () => html`${s}`,
+          ),
+      )}</span
+    >`;
     }
 
     private renderQuote(x: string | TemplateResult) {
@@ -102,96 +102,146 @@ export class JsonViewer extends LitElement {
 
     private renderObject(o: object, isArray = false) {
         const isObject = (x: unknown) => x !== null && typeof x === "object";
+        const entries = Object.entries(o);
+        const openBracket = isArray ? "[" : "{";
+        const closeBracket = isArray ? "]" : "}";
+        const isEmpty = entries.length === 0;
+
+        if (isEmpty) {
+            return html`<span class="object">${openBracket}${closeBracket}</span>`;
+        }
 
         return html`<div class="object">
-            ${Object.entries(o).map(([k, v]) =>
-                when(
-                    isObject(v),
-                    () => html`<json-collapse
-                        .hideMarker=${false}
-                        ${ref((e) => {
-                            if (e) this._collapseSet.add(e as JsonCollapse);
-                        })}
-                    >
-                        <span slot="open">
-                            ${this.renderPropertyKey(k)}
-                            <span class="propertyKeyValuePlaceholder">
-                                ${when(
-                                    isArray,
-                                    () => html`[…]`,
-                                    () => html`{…}`,
-                                )}
-                            </span>
-                        </span>
-                        <span slot="close">${this.renderPropertyKey(k)}</span>
-                        <json-viewer
-                            .data=${v}
-                            style="padding-left: 1rem"
-                            ${ref((e) => {
-                                if (e) this._subViewer.add(e as JsonViewer);
-                            })}
-                        ></json-viewer>
-                    </json-collapse>`,
-                    () => {
-                        const content = html`${this.renderPropertyKey(k)}
-                            <json-viewer
-                                .data=${v}
-                                style="display: inline-block; vertical-align: top"
-                            ></json-viewer>`;
+      <div class="objectContent">
+        <span class="bracket">${openBracket}</span>
+        <div class="objectBody">
+          ${entries.map(([k, v], index) => {
+              const isLast = index === entries.length - 1;
+              return when(
+                  isObject(v),
+                  () => html`<json-collapse
+                .hideMarker=${false}
+                ${ref((e) => {
+                    if (e) this._collapseSet.add(e as JsonCollapse);
+                })}
+              >
+                <span slot="open">
+                  ${this.renderPropertyKey(k, isArray)}
+                  <span class="propertyKeyValuePlaceholder"
+                    >${when(
+                        Array.isArray(v),
+                        () => html`Array(${v.length})`,
+                        () => html`Object{…}`,
+                    )}</span
+                  >${when(!isLast, () => html`<span class="comma">,</span>`)}
+                </span>
+                <span slot="close"> ${this.renderPropertyKey(k, isArray)} </span>
+                <json-viewer
+                  .data=${v}
+                  style="padding-left: 1rem;"
+                  ${ref((e) => {
+                      if (e) this._subViewer.add(e as JsonViewer);
+                  })}
+                ></json-viewer>
+              </json-collapse>`,
+                  () => {
+                      const content = html`<span class="propertyLine">
+                  ${this.renderPropertyKey(k, isArray)}
+                  <json-viewer .data=${v} style="display: inline;"></json-viewer>${when(
+                      !isLast,
+                      () => html`<span class="comma">,</span>`,
+                  )}
+                </span>`;
 
-                        return html`<json-collapse .freeze=${true}>
-                            <div slot="open">${content}</div>
-                            <div slot="close">${content}</div>
-                        </json-collapse>`;
-                    },
-                ),
-            )}
-        </div> `;
+                      return html`<json-collapse .freeze=${true}>
+                  <div slot="open">${content}</div>
+                  <div slot="close">${content}</div>
+                </json-collapse>`;
+                  },
+              );
+          })}
+        </div>
+        <span class="bracket">${closeBracket}</span>
+      </div>
+    </div> `;
     }
 
-    private renderPropertyKey(k: string) {
+    private renderPropertyKey(k: string, isArray = false) {
+        if (isArray) {
+            return html`<span class="arrayIndex">${k}</span>`;
+        }
         return html`<span class="propertyKey">${k}</span>`;
     }
 
     static styles = css`
-        :host {
-            display: flow-root;
-            font-family: Consolas, monospace;
-            font-size: 14px;
-        }
-        .string {
-            white-space: pre-wrap;
-            overflow-x: auto;
-            color: #dd00a9;
-        }
-        .number {
-            color: #058b00;
-        }
-        .boolean {
-            color: #058b00;
-        }
-        .object {
-            color: #0074e8;
-        }
-        .null,
-        .undefined {
-            color: #737373;
-        }
-        a {
-            color: currentColor;
-        }
-        .quote::after {
-            content: '"';
-        }
-        .propertyKey {
-            user-select: all;
-        }
-        .propertyKey::after {
-            content: ": ";
-        }
-        .propertyKeyValuePlaceholder {
-            user-select: none;
-            font-size: 12px;
-        }
-    `;
+    :host {
+      display: flow-root;
+      font-family: "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas, "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    a {
+      color: currentColor;
+    }
+    .arrayIndex {
+      user-select: all;
+    }
+    .arrayIndex::after {
+      content: ": ";
+      user-select: none;
+    }
+    .boolean {
+      color: #058b00;
+    }
+    .bracket {
+      user-select: all;
+    }
+    .null,
+    .undefined {
+      color: #737373;
+    }
+    .number {
+      color: #058b00;
+    }
+    .object {
+      color: #0074e8;
+    }
+    .objectBody {
+      margin-left: 1rem;
+    }
+    .objectContent {
+      display: block;
+    }
+    .propertyKey {
+      user-select: all;
+    }
+    .propertyKey::after {
+      content: ": ";
+      user-select: none;
+    }
+    .propertyKeyValuePlaceholder {
+      font-size: 12px;
+      user-select: none;
+    }
+    .propertyLine {
+      display: block;
+      line-height: inherit;
+      margin: 0;
+    }
+    .propertyLine json-viewer {
+      display: inline;
+    }
+    .quote::after {
+      content: '"';
+      user-select: none;
+    }
+    .string {
+      color: #dd00a9;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    .comma {
+      margin-left: 1px;
+    }
+  `;
 }

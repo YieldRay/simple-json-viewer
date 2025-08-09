@@ -1,6 +1,6 @@
 {
     "name": "simple-json-viewer",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "type": "module",
     "types": "lib/json-viewer.d.ts",
     "main": "lib/json-viewer.js",
