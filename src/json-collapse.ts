@@ -91,14 +91,14 @@ export class JsonCollapse extends LitElement {
                     ${when(
                         this.expand,
                         () => html`<div style="rotate: 90deg">▶</div>`,
-                        () => html`<div>▶</div>`
+                        () => html`<div>▶</div>`,
                     )}
                 </div>
                 <div class="summary">
                     ${when(
                         this.expand,
                         () => html`<slot name="close"></slot>`,
-                        () => html`<slot name="open"></slot>`
+                        () => html`<slot name="open"></slot>`,
                     )}
                 </div>
             </div>
@@ -113,7 +113,7 @@ export class JsonCollapse extends LitElement {
         this.dispatchEvent(
             new CustomEvent<{ expand: boolean }>("change", {
                 detail: { expand: this.expand },
-            })
+            }),
         );
     }
 }
